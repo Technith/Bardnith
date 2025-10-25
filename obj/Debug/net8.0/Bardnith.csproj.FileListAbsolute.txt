@@ -1,0 +1,14 @@
+/home/technith/Documents/Github/Bardnith/bin/Debug/net8.0/Bardnith
+/home/technith/Documents/Github/Bardnith/bin/Debug/net8.0/Bardnith.deps.json
+/home/technith/Documents/Github/Bardnith/bin/Debug/net8.0/Bardnith.runtimeconfig.json
+/home/technith/Documents/Github/Bardnith/bin/Debug/net8.0/Bardnith.dll
+/home/technith/Documents/Github/Bardnith/bin/Debug/net8.0/Bardnith.pdb
+/home/technith/Documents/Github/Bardnith/obj/Debug/net8.0/Bardnith.GeneratedMSBuildEditorConfig.editorconfig
+/home/technith/Documents/Github/Bardnith/obj/Debug/net8.0/Bardnith.AssemblyInfoInputs.cache
+/home/technith/Documents/Github/Bardnith/obj/Debug/net8.0/Bardnith.AssemblyInfo.cs
+/home/technith/Documents/Github/Bardnith/obj/Debug/net8.0/Bardnith.csproj.CoreCompileInputs.cache
+/home/technith/Documents/Github/Bardnith/obj/Debug/net8.0/Bardnith.dll
+/home/technith/Documents/Github/Bardnith/obj/Debug/net8.0/refint/Bardnith.dll
+/home/technith/Documents/Github/Bardnith/obj/Debug/net8.0/Bardnith.pdb
+/home/technith/Documents/Github/Bardnith/obj/Debug/net8.0/Bardnith.genruntimeconfig.cache
+/home/technith/Documents/Github/Bardnith/obj/Debug/net8.0/ref/Bardnith.dll

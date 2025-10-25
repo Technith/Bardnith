@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "bFpFFjTqf8ZmOy/McNPEacbpY9AmdT6CUltfStRrnhUi1nNCIEq7ZlA07K7A0D60Q25PnW8GT1juNZymmgGJAg==",
+  "success": true,
+  "projectFilePath": "/home/technith/Documents/Github/Bardnith/Bardnith.csproj",
+  "expectedPackageFiles": [
+    "/home/technith/.nuget/packages/microsoft.aspnetcore.app.ref/8.0.20/microsoft.aspnetcore.app.ref.8.0.20.nupkg.sha512"
+  ],
+  "logs": []
+}
