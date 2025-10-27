@@ -3,14 +3,15 @@ using System.Text.Json;
 
 class Bardnith
 {
-    static void Main()
+    static void Main(string[] args)
     {
-        Console.WriteLine("Title: " + GetTitle());
+        JsonDocument json = GetJson();
+        Console.WriteLine(GetInfo(json));
     }
 
-    static string GetTitle()
+    static JsonDocument GetJson()
     {
-        Console.WriteLine("Enter video ID (string at the end of URL)");
+        Console.Write("Enter video ID (string at the end of URL) ");
         string url = Console.ReadLine() ?? "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
 
         ProcessStartInfo psi = new ProcessStartInfo
@@ -35,14 +36,24 @@ class Bardnith
         }
 
         JsonDocument json;
-        string title = "No Title";
 
         if (output != null)
         {
             json = JsonDocument.Parse(output);
-            title = json.RootElement.GetProperty("title").GetString() ?? "No Title";
+            return json;
         }
 
-        return title;
+        return null!;
+    }
+
+    static string GetInfo(JsonDocument json)
+    {
+        string title;
+        title = json.RootElement.GetProperty("title").GetString() ?? "No Title";
+        int duration = json.RootElement.GetProperty("duration").GetInt32();
+        int min = duration / 60;
+        int sec = duration % 60;
+
+        return $"{title} - ({min}:{sec})";
     }
 }
