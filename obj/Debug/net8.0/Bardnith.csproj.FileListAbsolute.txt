@@ -31,3 +31,4 @@
 /home/technith/Documents/Github/Bardnith/bin/Debug/net8.0/System.Reactive.dll
 /home/technith/Documents/Github/Bardnith/obj/Debug/net8.0/Bardnith.csproj.AssemblyReference.cache
 /home/technith/Documents/Github/Bardnith/obj/Debug/net8.0/Bardnith.csproj.CopyComplete
+/home/technith/Documents/Github/Bardnith/obj/Debug/net8.0/Bardnith.sourcelink.json

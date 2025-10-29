@@ -106,6 +106,25 @@ public static class AudioClients
         _clients.TryRemove(guildId, out _);
 }
 
+public class Playback
+{
+    public Task? PlaybackTask { get; set; }
+    public Process? FfmpegProcess { get; set; }
+    public Process? YtdlpProcess { get; set; }
+}
+
+// Change to get/set
+// Add command to toggle autoplay on/off
+public class PlaybackOptions
+{
+    public bool autoplay = true;
+}
+
+public static class PlaybackDictionary
+{
+    public static readonly Dictionary<ulong, Playback> Playbacks = new();
+}
+
 public class SlashModule : InteractionModuleBase<SocketInteractionContext>
 {
 
@@ -148,7 +167,7 @@ public class SlashModule : InteractionModuleBase<SocketInteractionContext>
         try
         {
             MusicQueue.songs.Enqueue(url);
-            await FollowupAsync($"Added {await GetTitleDurationAsync(url)} to queue.");
+            await FollowupAsync($"Added {url} to queue.");
         }
         catch (Exception ex)
         {
@@ -265,7 +284,12 @@ public class SlashModule : InteractionModuleBase<SocketInteractionContext>
             return;
         }
 
-        _ = Task.Run(async () =>
+        var options = new PlaybackOptions();
+
+        var playback = new Playback();
+        PlaybackDictionary.Playbacks[guildId] = playback;
+
+        playback.PlaybackTask = Task.Run(async () =>
            {
                try
                {
@@ -275,13 +299,14 @@ public class SlashModule : InteractionModuleBase<SocketInteractionContext>
                        StartInfo = new ProcessStartInfo
                        {
                            FileName = "yt-dlp_linux",
-                           Arguments = $"--no-warnings -f bestaudio -g {url}",
+                           Arguments = $"-f bestaudio -g {url}",
                            RedirectStandardOutput = true,
                            UseShellExecute = false,
                            CreateNoWindow = true
                        }
                    };
                    ytdlpProcess.Start();
+                   playback.YtdlpProcess = ytdlpProcess;
                    string? audioUrl = await ytdlpProcess.StandardOutput.ReadLineAsync();
                    ytdlpProcess.WaitForExit();
 
@@ -298,6 +323,7 @@ public class SlashModule : InteractionModuleBase<SocketInteractionContext>
                        }
                    };
                    ffmpegProcess.Start();
+                   playback.FfmpegProcess = ffmpegProcess;
 
                    using var output = ffmpegProcess.StandardOutput.BaseStream;
                    using var discordStream = audioClient.CreatePCMStream(AudioApplication.Music);
@@ -309,7 +335,9 @@ public class SlashModule : InteractionModuleBase<SocketInteractionContext>
                    }
                    finally
                    {
-                       ffmpegProcess.Kill(true);
+                       playback.FfmpegProcess.Kill();
+                       playback.YtdlpProcess.Kill();
+                       playback.PlaybackTask = null;
                    }
                }
                catch (Exception ex)
@@ -318,11 +346,38 @@ public class SlashModule : InteractionModuleBase<SocketInteractionContext>
                    await RespondAsync($"Error while playing audio: {ex.Message}");
                    return;
                }
+
+               if (options.autoplay)
+               {
+                   await Task.Delay(1000);
+                   await PlayAsync();
+               }
            });
 
         // Respond immediately so bot is free for other commands
         await RespondAsync($"Now playing: {url}");
+    }
 
+    [SlashCommand("skip", "Skips current song")]
+    async Task SkipAsync()
+    {
+        var guildId = Context.Guild.Id;
+        if (!PlaybackDictionary.Playbacks.TryGetValue(guildId, out var playback))
+        {
+            await RespondAsync("Nothing currently plyaing.");
+            return;
+        }
+
+        try
+        {
+            playback.FfmpegProcess?.Kill();
+            playback.YtdlpProcess?.Kill();
+            await RespondAsync("Skipped current song");
+        }
+        catch (Exception ex)
+        {
+            await RespondAsync($"Failed to skip song: {ex.Message}");
+        }
     }
 
     async Task<JsonDocument> GetJsonAsync(string url)
@@ -370,7 +425,7 @@ public class SlashModule : InteractionModuleBase<SocketInteractionContext>
         ProcessStartInfo psi = new ProcessStartInfo
         {
             FileName = "yt-dlp_linux",
-            Arguments = $"--no-warings --print \"%(title)s (%(duration_string)s)\" {url}",
+            Arguments = $"--print \"%(title)s (%(duration_string)s)\" {url}",
             RedirectStandardOutput = true,
             UseShellExecute = false,
             CreateNoWindow = true
