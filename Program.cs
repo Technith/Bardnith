@@ -167,7 +167,7 @@ public class SlashModule : InteractionModuleBase<SocketInteractionContext>
         try
         {
             MusicQueue.songs.Enqueue(url);
-            await FollowupAsync($"Added {url} to queue.");
+            await FollowupAsync($"Added {url} to queue");
         }
         catch (Exception ex)
         {
@@ -206,14 +206,14 @@ public class SlashModule : InteractionModuleBase<SocketInteractionContext>
 
         if (channel == null)
         {
-            await RespondAsync("You must be in a voice channel first!");
+            await RespondAsync("Must be in voice channel");
             return;
         }
 
         var guild = Context.Guild as SocketGuild;
         if (guild == null)
         {
-            await RespondAsync("Error: Could not get the guild instance.", ephemeral: true);
+            await RespondAsync("Error: Could not get the guild instance", ephemeral: true);
             return;
         }
 
@@ -246,7 +246,7 @@ public class SlashModule : InteractionModuleBase<SocketInteractionContext>
         var audioClient = AudioClients.Get(guildId);
         if (audioClient == null)
         {
-            await RespondAsync("I am not connected to a voice channel in this server.");
+            await RespondAsync("Bot is not in voice channel");
             return;
         }
 
@@ -272,7 +272,7 @@ public class SlashModule : InteractionModuleBase<SocketInteractionContext>
     {
         if (!MusicQueue.songs.TryDequeue(out string? url))
         {
-            await FollowupAsync("Queue is empty");
+            await RespondAsync("Queue is empty");
             return;
         }
 
@@ -280,7 +280,7 @@ public class SlashModule : InteractionModuleBase<SocketInteractionContext>
         var audioClient = AudioClients.Get(guildId);
         if (audioClient == null)
         {
-            await RespondAsync("I am not connected to a voice channel in this server.");
+            await RespondAsync("Bot is not in voice channel");
             return;
         }
 
