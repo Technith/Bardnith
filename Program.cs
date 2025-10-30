@@ -43,10 +43,12 @@ class Bardnith
 
         try
         {
+
             await _client.LoginAsync(Discord.TokenType.Bot, token);
             await _client.StartAsync();
 
             await _interaction.AddModulesAsync(Assembly.GetEntryAssembly(), null);
+
 
             await Task.Delay(-1);
         }
@@ -55,6 +57,7 @@ class Bardnith
             Console.WriteLine($"Error: {ex}");
         }
     }
+
 
     async Task OnReadyAsync()
     {
@@ -100,16 +103,16 @@ public static class MusicQueue
 
 public static class AudioClients
 {
-    private static readonly ConcurrentDictionary<ulong, IAudioClient> _clients = new();
+    private static readonly ConcurrentDictionary<ulong, IAudioClient> clients = new();
 
     public static IAudioClient? Get(ulong guildId) =>
-        _clients.TryGetValue(guildId, out var client) ? client : null;
+        clients.TryGetValue(guildId, out var client) ? client : null;
 
     public static void Set(ulong guildId, IAudioClient client) =>
-        _clients[guildId] = client;
+        clients[guildId] = client;
 
     public static void Remove(ulong guildId) =>
-        _clients.TryRemove(guildId, out _);
+        clients.TryRemove(guildId, out _);
 }
 
 public class Playback
@@ -189,21 +192,19 @@ public class SlashModule : InteractionModuleBase<SocketInteractionContext>
 
         string output = "**Current Queue:**\n\t";
 
-        _ = Task.Run(async () =>
-           {
-               try
-               {
-                   foreach (string song in MusicQueue.songs)
-                   {
-                       output += await GetTitleDurationAsync(song);
-                       output += "\n\t";
-                   }
-               }
-               catch (Exception ex)
-               {
-                   await FollowupAsync($"Error: {ex.Message}", ephemeral: true);
-               }
-           });
+        try
+        {
+            foreach (string song in MusicQueue.songs)
+            {
+                output += await GetTitleDurationAsync(song);
+                output += "\n\t";
+            }
+        }
+        catch (Exception ex)
+        {
+            await FollowupAsync($"Error: {ex.Message}", ephemeral: true);
+        }
+
         await FollowupAsync(output);
     }
 
@@ -240,36 +241,7 @@ public class SlashModule : InteractionModuleBase<SocketInteractionContext>
 
         try
         {
-            /*var audioClient = await channel.ConnectAsync();
-
-            audioClient.Disconnected += async (ex) =>
-            {
-                if (ex is Discord.Net.WebSocketClosedException wsEx && wsEx.CloseCode == 4006)
-                {
-                    Console.WriteLine("[AUDIO] Voice session invalid (4006). Retrying in 3s...");
-                    await Task.Delay(3000);
-
-                    // Optional: reconnect
-                    try
-                    {
-                        var newClient = await channel.ConnectAsync();
-                        Console.WriteLine("[AUDIO] Reconnected successfully!");
-                    }
-                    catch (Exception reconnectEx)
-                    {
-                        Console.WriteLine($"[AUDIO] Reconnect failed: {reconnectEx}");
-                    }
-                }
-                else
-                {
-                    Console.WriteLine($"[AUDIO] Disconnected: {ex?.Message ?? "No exception"}");
-                }
-            };
-            AudioClients.Set(Context.Guild.Id, audioClient);
-            await FollowupAsync($"Joined **{channel.Name}**");
-            Console.WriteLine("CONNECTED");*/
-
-            var audioClient = await channel.ConnectAsync();
+            var audioClient = await channel.ConnectAsync().ConfigureAwait(false);
             AudioClients.Set(Context.Guild.Id, audioClient);
             await FollowupAsync($"Joined **{channel.Name}**");
             Console.WriteLine("CONNECTED");
@@ -295,10 +267,10 @@ public class SlashModule : InteractionModuleBase<SocketInteractionContext>
 
         try
         {
-            await audioClient.StopAsync();   // Stops any audio
+            await audioClient.StopAsync().ConfigureAwait(false);   // Stops any audio
             audioClient.Dispose();           // Disconnects the bot
             AudioClients.Remove(guildId);    // Remove from the dictionary
-            await Task.Delay(1000);          // Give Discord a moment to release the session
+            await Task.Delay(5000);          // Give Discord a moment to release the session
 
             await FollowupAsync("Disconnected from the voice channel.");
         }
