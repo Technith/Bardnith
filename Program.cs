@@ -23,7 +23,9 @@ class Bardnith
     {
         _client = new DiscordSocketClient(new DiscordSocketConfig
         {
-            GatewayIntents = GatewayIntents.GuildVoiceStates | GatewayIntents.Guilds
+            GatewayIntents = GatewayIntents.GuildVoiceStates | GatewayIntents.Guilds,
+            AlwaysDownloadUsers = false,
+            LogLevel = LogSeverity.Debug
         });
 
         _interaction = new InteractionService(_client.Rest);
@@ -46,8 +48,6 @@ class Bardnith
 
             await _interaction.AddModulesAsync(Assembly.GetEntryAssembly(), null);
 
-            // Run Program Logic
-
             await Task.Delay(-1);
         }
         catch (Exception ex)
@@ -60,7 +60,13 @@ class Bardnith
     {
         Console.WriteLine($"Logged in as {_client?.CurrentUser} on {_client?.Guilds.Count} servers.");
 
-        var guild = _client!.GetGuild(622299639298654219);
+
+
+        //var guild = _client!.GetGuild(622299639298654219);
+        var guild = _client?.GetGuild(ulong.Parse(Environment.GetEnvironmentVariable("GUILD_ID") ??
+            throw new InvalidOperationException("Invalid Guild ID in .env"))) ??
+            throw new InvalidOperationException("Error parsing Guild ID");
+
         await _interaction!.RegisterCommandsToGuildAsync(guild.Id);
         Console.WriteLine("Slash commands registered.");
     }
@@ -113,8 +119,6 @@ public class Playback
     public Process? YtdlpProcess { get; set; }
 }
 
-// Change to get/set
-// Add command to toggle autoplay on/off
 public class PlaybackOptions
 {
     public bool autoplay = true;
@@ -161,18 +165,21 @@ public class SlashModule : InteractionModuleBase<SocketInteractionContext>
 
         if (url.Length == 0)
         {
-            await FollowupAsync("Invalid URL");
+            await FollowupAsync("Empty URL");
         }
 
-        try
-        {
-            MusicQueue.songs.Enqueue(url);
-            await FollowupAsync($"Added {url} to queue");
-        }
-        catch (Exception ex)
-        {
-            await FollowupAsync($"Error: {ex.Message}", ephemeral: true);
-        }
+        _ = Task.Run(async () =>
+           {
+               try
+               {
+                   MusicQueue.songs.Enqueue(url);
+                   await FollowupAsync($"Added {url} to queue");
+               }
+               catch (Exception ex)
+               {
+                   await FollowupAsync($"Error: {ex.Message}", ephemeral: true);
+               }
+           });
     }
 
     [SlashCommand("queue", "List Current Queue")]
@@ -182,19 +189,21 @@ public class SlashModule : InteractionModuleBase<SocketInteractionContext>
 
         string output = "**Current Queue:**\n\t";
 
-        try
-        {
-            foreach (string song in MusicQueue.songs)
-            {
-                output += await GetTitleDurationAsync(song);
-                output += "\n\t";
-            }
-        }
-        catch (Exception ex)
-        {
-            await FollowupAsync($"Error: {ex.Message}", ephemeral: true);
-        }
-
+        _ = Task.Run(async () =>
+           {
+               try
+               {
+                   foreach (string song in MusicQueue.songs)
+                   {
+                       output += await GetTitleDurationAsync(song);
+                       output += "\n\t";
+                   }
+               }
+               catch (Exception ex)
+               {
+                   await FollowupAsync($"Error: {ex.Message}", ephemeral: true);
+               }
+           });
         await FollowupAsync(output);
     }
 
@@ -202,15 +211,16 @@ public class SlashModule : InteractionModuleBase<SocketInteractionContext>
     public async Task JoinAsync()
     {
         var user = Context.User as SocketGuildUser;
+        var guild = Context.Guild as SocketGuild;
         var channel = user?.VoiceChannel;
+        //var channel = guild.GetVoiceChannel(622299639298654223);
 
         if (channel == null)
         {
-            await RespondAsync("Must be in voice channel");
+            await RespondAsync("Error: Must be in voice channel", ephemeral: true);
             return;
         }
 
-        var guild = Context.Guild as SocketGuild;
         if (guild == null)
         {
             await RespondAsync("Error: Could not get the guild instance", ephemeral: true);
@@ -227,11 +237,42 @@ public class SlashModule : InteractionModuleBase<SocketInteractionContext>
 
         var guildId = Context.Guild.Id;
 
+
         try
         {
-            var audioClient = await channel.ConnectAsync(selfDeaf: true);
+            /*var audioClient = await channel.ConnectAsync();
+
+            audioClient.Disconnected += async (ex) =>
+            {
+                if (ex is Discord.Net.WebSocketClosedException wsEx && wsEx.CloseCode == 4006)
+                {
+                    Console.WriteLine("[AUDIO] Voice session invalid (4006). Retrying in 3s...");
+                    await Task.Delay(3000);
+
+                    // Optional: reconnect
+                    try
+                    {
+                        var newClient = await channel.ConnectAsync();
+                        Console.WriteLine("[AUDIO] Reconnected successfully!");
+                    }
+                    catch (Exception reconnectEx)
+                    {
+                        Console.WriteLine($"[AUDIO] Reconnect failed: {reconnectEx}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"[AUDIO] Disconnected: {ex?.Message ?? "No exception"}");
+                }
+            };
             AudioClients.Set(Context.Guild.Id, audioClient);
             await FollowupAsync($"Joined **{channel.Name}**");
+            Console.WriteLine("CONNECTED");*/
+
+            var audioClient = await channel.ConnectAsync();
+            AudioClients.Set(Context.Guild.Id, audioClient);
+            await FollowupAsync($"Joined **{channel.Name}**");
+            Console.WriteLine("CONNECTED");
         }
         catch (Exception ex)
         {

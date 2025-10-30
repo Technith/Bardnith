@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Bardnith")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9d23c142a9bc7ff0dc209abc9c6b60cdf3df19d1")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1d5a204cf2148f47495d6b31b04cf0f9aeeabb43")]
 [assembly: System.Reflection.AssemblyProductAttribute("Bardnith")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Bardnith")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
